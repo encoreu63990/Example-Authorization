@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Formatting;
 using System.Web.Http;
 using System.Web.Http.Controllers;
 
@@ -77,10 +78,10 @@ namespace Example_Authorization.CustomAuthorization
              * 2. Content: 回傳的結果，Json.Xml
              */
 
-            // 建立回應訊息並自動加入原始Request (要求: using System.Net.Http)
-            var responseMessage = actionContext.Request.CreateResponse(HttpStatusCode.Forbidden);
+            // 建立回應訊息，自動加入原始Request
+            var response = actionContext.Request.CreateResponse(HttpStatusCode.OK);
 
-            // 建立回應訊息 (需要手動加入原始Request)
+            // 建立回應訊息，手動加入原始Request
             // var responseMessage = new HttpResponseMessage(HttpStatusCode.Forbidden);
             // responseMessage.RequestMessage = actionContext.Request;
 
@@ -91,14 +92,13 @@ namespace Example_Authorization.CustomAuthorization
                 Message = _ErrorMessage
             };
 
-            // 將錯誤結果序列成 Json
-            var resultResponse = JsonConvert.SerializeObject(ErrorResult);
+            // 建立回應 (String Content)
+            //response.Content = new StringContent(JsonConvert.SerializeObject(ErrorResult));
+            //actionContext.Response = response;
 
-            // ResponseMessage 回傳內容加入 Json
-            responseMessage.Content = new StringContent(resultResponse);
-
-            // 設定 Respon 為我們定義的 Respon
-            actionContext.Response = responseMessage;
+            // 建立回應 (Object Content)
+            response.Content = new ObjectContent(ErrorResult.GetType(), ErrorResult, new JsonMediaTypeFormatter());
+            actionContext.Response = response;
 
             // 避免建立的 Response 被預設的 Response 洗掉
             // base.HandleUnauthorizedRequest(actionContext);
